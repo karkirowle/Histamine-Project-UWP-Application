@@ -9,7 +9,9 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Button x:Name="button" Content="Connect" HorizontalAlignment="Left" Height="30" Margin="34,10,0,0" VerticalAlignment="Top" Width="81" Click="button_Click"/>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="97" Margin="154,10,0,0" TextWrapping="Wrap" Text="Waiting for user interaction..." VerticalAlignment="Top" Width="243" TextChanged="textBox_TextChanged" IsReadOnly="True"/>
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="97" Margin="152,52,0,0" TextWrapping="Wrap" Text="Waiting for user interaction..." VerticalAlignment="Top" Width="243" TextChanged="textBox_TextChanged" IsReadOnly="True"/>
+        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="30" Margin="152,10,0,0" TextWrapping="Wrap" Text="Message to send" VerticalAlignment="Top" Width="243" TextChanged="textBox1_TextChanged"/>
+        <Button x:Name="button1" Content="Send" HorizontalAlignment="Left" Margin="426,10,0,0" VerticalAlignment="Top" Background="#FF7D6868" Click="button1_Click"/>
 
     </Grid>
 </Page>

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"  xmlns:m2="http://schemas.microsoft.com/appx/manifest/foundation/windows10" IgnorableNamespaces="uap mp">
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:m2="http://schemas.microsoft.com/appx/manifest/foundation/windows10" IgnorableNamespaces="uap mp">
   <Identity Name="acbf6f03-e62b-4d1e-8c25-9f649ca5af4c" Publisher="CN=Boomkin" Version="1.0.0.0" />
   <mp:PhoneIdentity PhoneProductId="acbf6f03-e62b-4d1e-8c25-9f649ca5af4c" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
@@ -23,12 +23,16 @@
     </Application>
   </Applications>
   <Capabilities>
+    <DeviceCapability Name="bluetooth" />
     <m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
       <m2:Device Id="any">
-        <m2:Function Type="serviceId:00001800-0000-1000-8000-00805f9b34fb"/>
-        <m2:Function Type="serviceId:00002a00-0000-1000-8000-00805f9b34fb"/>
-        <m2:Function Type="serviceId:0000ffe1-0000-1000-8000-00805f9b34fb"/>
-        <m2:Function Type="serviceId:0000ffe0-0000-1000-8000-00805f9b34fb"/>
+        <m2:Function Type="serviceId:00001800-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:00002a00-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:0000ffe1-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:0000ffe0-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:00002220-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:00002221-0000-1000-8000-00805f9b34fb" />
+        <m2:Function Type="serviceId:00002222-0000-1000-8000-00805f9b34fb" />
       </m2:Device>
     </m2:DeviceCapability>
   </Capabilities>
