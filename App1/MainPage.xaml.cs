@@ -7,12 +7,15 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
+using Windows.Media;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Bluetooth;
@@ -28,6 +31,8 @@ namespace App1
     /// Histamine Control Panel version 0.3 Alpha
     /// Implements two-way Bluetooth communication interface for the basis of histamine sensing apparatus
     /// 
+    /// NEW 0.4 - Two-way Bluetooth communication interface with a TI MSP430 via an RFDuino. Able to receive a plot shorter time series
+    /// data, sending is sometimes unstable.
     /// 0.3 - Contains the OxyPlot module to visualise voltammetry. TODO: Make an interface for any voltammetry data series accounting for thread management.
     /// 
     /// Bence Halpern
@@ -49,28 +54,24 @@ namespace App1
         public MainPage()
         {
             this.InitializeComponent();
-            Debug.WriteLine("A");
-            
-            MyModel = new PlotModel { Title = "Cyclic Voltammetry" };
-            // var scatterSeries = new ScatterSeries { MarkerType = MarkerType.Circle };
-            var LineSeries = new LineSeries{};
-            for (int i = 0; i < x_v.Length; i++)
-            {
-                //scatterSeries.Points.Add(new ScatterPoint(x_v[i], y_v[i]));
-                LineSeries.Points.Add(new DataPoint(x_v[i], y_v[i]));
-                //MyModel.Series.Add(new FunctionSeries(Math.Cos, 0, 10, 0.1, "cos(x)"));
-            }
-            MyModel.Series.Add(LineSeries);
+            MyModel = new PlotModel { Title = "Loading voltamogramm..." };
+         //  var defaultSeries = new LineSeries { };
+            Debug.WriteLine(MyPlotView.Background);
+            MyPlotView.Background = new ImageBrush { ImageSource = new BitmapImage(new Uri(this.BaseUri, "Assets/SplashScreen.scale-200.png"))};
             MyPlotView.Model = MyModel;
+            Debug.WriteLine("A");
             LoadedState();
             Debug.WriteLine("B");
         }
         private async void LoadedState()
         {
-            var taskDevices = await getDevices();
-            Debug.WriteLine("G");
-           sendMessage("Hello World");
-            
+           var taskDevices = await getDevices();
+           Debug.WriteLine("G");
+           //sendMessage("Hello World");
+           updatePlot(x_v, y_v);
+            await Task.Delay(3000); // wait 500 ms
+            double[] valami = { 1, 2, 3, 4, 5 };
+            updatePlot(valami, valami);
         }
         public async Task<List<string>> getDevices()
         {
@@ -93,6 +94,22 @@ namespace App1
                 return deviceList;
         }
 
+        async void updatePlot(double[] x_values, double[] y_values)
+        {
+            MyModel = new PlotModel { Title = "Cyclic Voltammetry" };
+            var LineSeries = new LineSeries { };
+            for (int i = 0; i < x_values.Length; i++)
+            {
+                LineSeries.Points.Add(new DataPoint(x_values[i], y_values[i]));
+            }
+            MyModel.Series.Add(LineSeries);
+            // Dispatcher call to reach UI thread
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
+                MyPlotView.Background = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                MyPlotView.Model = MyModel;
+         });
+
+        }
 
         async void accData_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
@@ -110,7 +127,52 @@ namespace App1
                     textBox.Text += newData;
                 }
                 textBox.Text += "\n";
+                messageInterpreter(newData);
             });
+        }
+
+        void messageInterpreter(string newData)
+        {
+            if (newData[0].Equals('v'))
+            {
+                // Voltammetry data incoming
+                string[] dataSplit = newData.Split();
+                Debug.WriteLine(dataSplit[1].Equals('x'));
+                Debug.WriteLine(dataSplit.Length);
+                int startX = 0;
+                int endX = 0;
+                int startY = 0;
+                int endY = dataSplit.Length - 2; // last is new line
+                // Identify start and end
+                for (int i = 0; i < dataSplit.Length;  i++)
+                {
+                    if (dataSplit[i].Equals("x"))
+                    {
+                        startX = i + 1;
+                        Debug.WriteLine("updatedX");
+                    }
+                    if (dataSplit[i].Equals("y"))
+                    {
+                        startY = i + 1;
+                        endX = i - 1;
+                    }
+                    
+                }
+                // Create array for the plot
+                double[] x_plot = new double[endX-startX+1];  
+                for (int i = startX; i <= endX; i++)
+                {
+                    //Debug.WriteLine(dataSplit[i]);
+                    x_plot[i - startX] = Convert.ToDouble(dataSplit[i]);
+                }
+                double[] y_plot = new double[endY - startY + 1];
+                for (int i = startY; i <= endY; i++)
+                {
+                    y_plot[i - startY] = Convert.ToDouble(dataSplit[i]);
+                }
+                // UpdatePlot
+                updatePlot(x_plot, y_plot);
+            }
         }
 
         public async void sendMessage(string messageToSend)
@@ -134,12 +196,6 @@ namespace App1
                 yield return str.Substring(i, Math.Min(maxChunkSize, str.Length - i));
         }
 
-        public void MainViewModel()
-        {
-            this.MyModel = new PlotModel { Title = "Example 1" };
-            this.MyModel.Series.Add(new FunctionSeries(Math.Cos, 0, 10, 0.1, "cos(x)"));
-        }
-
         public PlotModel MyModel { get; private set; }
 
         private void button_Click(object sender, RoutedEventArgs e)
@@ -159,6 +215,17 @@ namespace App1
         {
             // This button is for sending the message in the textbox
             sendMessage(textBox1.Text);
+        }
+
+        private void textBlock_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void button2_Click(object sender, RoutedEventArgs e)
+        {
+            // Button programmed to initiate cv measurement
+            sendMessage("cv");
         }
     }
 }

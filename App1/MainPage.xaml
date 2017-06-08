@@ -8,13 +8,17 @@
     xmlns:oxy="using:OxyPlot.Windows"
     mc:Ignorable="d">
 
-   
+
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Button x:Name="button" Content="Connect" HorizontalAlignment="Left" Height="30" Margin="34,10,0,0" VerticalAlignment="Top" Width="81" Click="button_Click"/>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="97" Margin="152,52,0,0" TextWrapping="Wrap" Text="Waiting for user interaction..." VerticalAlignment="Top" Width="243" TextChanged="textBox_TextChanged" IsReadOnly="True"/>
-        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="30" Margin="152,10,0,0" TextWrapping="Wrap" Text="Message to send" VerticalAlignment="Top" Width="243" TextChanged="textBox1_TextChanged"/>
-        <Button x:Name="button1" Content="Send" HorizontalAlignment="Left" Margin="426,10,0,0" VerticalAlignment="Top" Background="#FF7D6868" Click="button1_Click"/>
-        <oxy:PlotView x:Name="MyPlotView" Model="{Binding MyModel}" Margin="566,28,352,456"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="313" Margin="10,10,0,0" Stroke="Black" VerticalAlignment="Top" Width="523"/>
+        <Button x:Name="button" Content="Connect" HorizontalAlignment="Left" Height="30" Margin="36,49,0,0" VerticalAlignment="Top" Width="81" Click="button_Click"/>
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="207" Margin="31,97,0,0" TextWrapping="Wrap" Text="Waiting for user interaction..." VerticalAlignment="Top" Width="490" TextChanged="textBox_TextChanged" IsReadOnly="True"/>
+        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="30" Margin="152,50,0,0" TextWrapping="Wrap" Text="Message to send" VerticalAlignment="Top" Width="243" TextChanged="textBox1_TextChanged"/>
+        <Button x:Name="button1" Content="Send" HorizontalAlignment="Left" Margin="442,48,0,0" VerticalAlignment="Top" Background="#FF7D6868" Click="button1_Click"/>
+
+        <oxy:PlotView x:Name="MyPlotView" Model="{Binding MyModel}" Margin="558,10,68,385"/>
+        <TextBlock x:Name="textBlock" HorizontalAlignment="Left" Height="20" Margin="31,19,0,0" TextWrapping="Wrap" Text="Developer-only console" VerticalAlignment="Top" Width="169" SelectionChanged="textBlock_SelectionChanged"/>
+        <Button x:Name="button2" Content="Start Voltammetry" HorizontalAlignment="Left" Margin="31,351,0,0" VerticalAlignment="Top" Height="44" Width="169" Click="button2_Click"/>
     </Grid>
 </Page>
