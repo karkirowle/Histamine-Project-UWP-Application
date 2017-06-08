@@ -6,19 +6,51 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:oxy="using:OxyPlot.Windows"
-    mc:Ignorable="d">
+    mc:Ignorable="d" Height="782.728">
+    <Page.Resources>
+        
+    </Page.Resources>
 
 
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="313" Margin="10,10,0,0" Stroke="Black" VerticalAlignment="Top" Width="523"/>
-        <Button x:Name="button" Content="Connect" HorizontalAlignment="Left" Height="30" Margin="36,49,0,0" VerticalAlignment="Top" Width="81" Click="button_Click"/>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="207" Margin="31,97,0,0" TextWrapping="Wrap" Text="Waiting for user interaction..." VerticalAlignment="Top" Width="490" TextChanged="textBox_TextChanged" IsReadOnly="True"/>
-        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="30" Margin="152,50,0,0" TextWrapping="Wrap" Text="Message to send" VerticalAlignment="Top" Width="243" TextChanged="textBox1_TextChanged"/>
-        <Button x:Name="button1" Content="Send" HorizontalAlignment="Left" Margin="442,48,0,0" VerticalAlignment="Top" Background="#FF7D6868" Click="button1_Click"/>
+        <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="313" Margin="12,46,0,0" Stroke="Black" VerticalAlignment="Top" Width="523"/>
+        <Button x:Name="button" Content="Connect" HorizontalAlignment="Left" Height="30" Margin="38,83,0,0" VerticalAlignment="Top" Width="81" Click="button_Click"/>
+        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="207" Margin="33,133,0,0" TextWrapping="Wrap" Text="Waiting for user interaction..." VerticalAlignment="Top" Width="490" TextChanged="textBox_TextChanged" IsReadOnly="True"/>
+        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="30" Margin="154,84,0,0" TextWrapping="Wrap" Text="Message to send" VerticalAlignment="Top" Width="243" TextChanged="textBox1_TextChanged"/>
+        <Button x:Name="button1" Content="Send" HorizontalAlignment="Left" Margin="444,82,0,0" VerticalAlignment="Top" Background="#FF7D6868" Click="button1_Click"/>
 
         <oxy:PlotView x:Name="MyPlotView" Model="{Binding MyModel}" Margin="558,10,68,385"/>
-        <TextBlock x:Name="textBlock" HorizontalAlignment="Left" Height="20" Margin="31,19,0,0" TextWrapping="Wrap" Text="Developer-only console" VerticalAlignment="Top" Width="169" SelectionChanged="textBlock_SelectionChanged"/>
-        <Button x:Name="button2" Content="Start Voltammetry" HorizontalAlignment="Left" Margin="31,351,0,0" VerticalAlignment="Top" Height="44" Width="169" Click="button2_Click"/>
+        <TextBlock x:Name="textBlock" HorizontalAlignment="Left" Height="20" Margin="33,53,0,0" TextWrapping="Wrap" Text="Developer-only console" VerticalAlignment="Top" Width="169" SelectionChanged="textBlock_SelectionChanged"/>
+        <Image x:Name="image" HorizontalAlignment="Left" Height="44" Margin="14,728,0,0" VerticalAlignment="Top" Width="44" Source="Assets/Square44x44Logo.png">
+        </Image>
+        <Pivot Title="Voltammetry measurement settings panel" Margin="33,389,705,86">
+            <PivotItem Header="Cyclic">
+                <Grid>
+                    <TextBlock x:Name="textBlock1_Copy1" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Height="21" Width="78" Margin="8,6,0,0" Text="Scan rate [V/s]"/>
+                    <TextBlock x:Name="textBlock1" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Height="23" Width="44" Margin="8,44,0,0" Text="Vmin" LineHeight="16"/>
+                    <TextBlock x:Name="textBlock1_Copy" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Height="32" Width="80" Margin="8,79,0,0" SelectionChanged="textBlock1_Copy_SelectionChanged" Text="Vmax"/>
+                    <TextBox x:Name="textBox2_Copy1" HorizontalAlignment="Left" Height="19" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="130" Margin="126,78,0,0"/>
+                    <TextBox x:Name="textBox2_Copy" HorizontalAlignment="Left" Height="19" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="130" Margin="126,0,0,0"/>
+                    <TextBox x:Name="textBox2" HorizontalAlignment="Left" Height="19" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="130" Margin="126,41,0,0"/>
+                    <Button x:Name="button2" Content="Start voltammetry" HorizontalAlignment="Left" VerticalAlignment="Top" Height="44" Width="169" Click="button2_Click" Margin="8,159,0,0"/>
+                </Grid>
+            </PivotItem>
+            <PivotItem Header="Square Wave" FlyoutBase.AttachedFlyout="{StaticResource FlyoutBase1}">
+                <Grid>
+                    <TextBlock x:Name="textBlock1_Copy2" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Height="21" Width="78" Margin="8,6,0,0" Text="Pulse width" LineHeight="16" SelectionChanged="textBlock1_Copy2_SelectionChanged"/>
+                    <TextBlock x:Name="textBlock1_Copy3" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Height="23" Width="44" Margin="8,44,0,0" Text="Period" LineHeight="16" SelectionChanged="textBlock1_Copy2_SelectionChanged"/>
+                    <TextBlock x:Name="textBlock1_Copy4" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Height="32" Width="80" Margin="8,79,0,0" Text="Amplitude" LineHeight="16" SelectionChanged="textBlock1_Copy2_SelectionChanged"/>
+                    <TextBlock x:Name="textBlock1_Copy5" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Height="26" Width="34" Margin="8,118,0,0" Text="Step" LineHeight="16" SelectionChanged="textBlock1_Copy2_SelectionChanged"/>
+                    <TextBox x:Name="textBox3" HorizontalAlignment="Left" Height="19" Margin="126,78,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="130"/>
+                    <TextBox x:Name="textBox3_Copy" HorizontalAlignment="Left" Height="19" Margin="126,0,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="130"/>
+                    <TextBox x:Name="textBox3_Copy1" HorizontalAlignment="Left" Height="19" Margin="126,115,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="130"/>
+                    <TextBox x:Name="textBox3_Copy2" HorizontalAlignment="Left" Height="19" Margin="126,41,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="130"/>
+                    <Button x:Name="button3" Content="Start voltammetry" HorizontalAlignment="Left" VerticalAlignment="Top" Height="44" Width="169" Margin="8,159,0,0"/>
+                </Grid>
+            </PivotItem>
+        </Pivot>
+        <TextBlock x:Name="textBlock2" HorizontalAlignment="Left" Height="20" TextWrapping="Wrap" Text="Histamine Control Panel ALPHA NON-RELEASE" VerticalAlignment="Top" Width="460"/>
+
     </Grid>
 </Page>

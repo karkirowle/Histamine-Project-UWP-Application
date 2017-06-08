@@ -4,5 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:App1"
     RequestedTheme="Light">
+    <Application.Resources>
+        <Flyout x:Key="FlyoutBase1">
+            <Grid Height="100" Width="674" RenderTransformOrigin="0.513,0.47"/>
+        </Flyout>
+    </Application.Resources>
 
 </Application>

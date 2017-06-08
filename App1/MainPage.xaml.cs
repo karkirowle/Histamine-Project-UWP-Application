@@ -28,10 +28,11 @@ using OxyPlot.Series;
 namespace App1
 {
     /// <summary>
-    /// Histamine Control Panel version 0.3 Alpha
+    /// Histamine Control Panel version 0.5 Alpha
     /// Implements two-way Bluetooth communication interface for the basis of histamine sensing apparatus
     /// 
-    /// NEW 0.4 - Two-way Bluetooth communication interface with a TI MSP430 via an RFDuino. Able to receive a plot shorter time series
+    /// NEW 0.5 - Basic login functionality implemented, interface created for different voltammetries, though the latter is not working fully.
+    /// 0.4 - Two-way Bluetooth communication interface with a TI MSP430 via an RFDuino. Able to receive a plot shorter time series
     /// data, sending is sometimes unstable.
     /// 0.3 - Contains the OxyPlot module to visualise voltammetry. TODO: Make an interface for any voltammetry data series accounting for thread management.
     /// 
@@ -55,13 +56,30 @@ namespace App1
         {
             this.InitializeComponent();
             MyModel = new PlotModel { Title = "Loading voltamogramm..." };
-         //  var defaultSeries = new LineSeries { };
+            LoginLoad();
+           /* if (signInDialog.Result == SignInResult.SignInOK)
+            {
+                // Sign in was successful.
+            } */
+      
+            //  var defaultSeries = new LineSeries { };
             Debug.WriteLine(MyPlotView.Background);
             MyPlotView.Background = new ImageBrush { ImageSource = new BitmapImage(new Uri(this.BaseUri, "Assets/SplashScreen.scale-200.png"))};
             MyPlotView.Model = MyModel;
             Debug.WriteLine("A");
             LoadedState();
             Debug.WriteLine("B");
+        }
+        private async void LoginLoad()
+        {
+            // Login screen
+            ContentDialog1 signInDialog = new ContentDialog1();
+            await signInDialog.ShowAsync();
+            if (!signInDialog.loggedIn)
+            {
+                LoginLoad();
+            }
+
         }
         private async void LoadedState()
         {
@@ -137,7 +155,8 @@ namespace App1
             {
                 // Voltammetry data incoming
                 string[] dataSplit = newData.Split();
-                Debug.WriteLine(dataSplit[1].Equals('x'));
+              
+              
                 Debug.WriteLine(dataSplit.Length);
                 int startX = 0;
                 int endX = 0;
@@ -146,10 +165,11 @@ namespace App1
                 // Identify start and end
                 for (int i = 0; i < dataSplit.Length;  i++)
                 {
+                    Debug.WriteLine(dataSplit[i]);
                     if (dataSplit[i].Equals("x"))
                     {
                         startX = i + 1;
-                        Debug.WriteLine("updatedX");
+                        //Debug.WriteLine("updatedX");
                     }
                     if (dataSplit[i].Equals("y"))
                     {
@@ -168,6 +188,7 @@ namespace App1
                 double[] y_plot = new double[endY - startY + 1];
                 for (int i = startY; i <= endY; i++)
                 {
+                    Debug.WriteLine(dataSplit[i]);
                     y_plot[i - startY] = Convert.ToDouble(dataSplit[i]);
                 }
                 // UpdatePlot
@@ -226,6 +247,15 @@ namespace App1
         {
             // Button programmed to initiate cv measurement
             sendMessage("cv");
+        }
+
+        private void textBlock1_Copy2_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void textBlock1_Copy_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
