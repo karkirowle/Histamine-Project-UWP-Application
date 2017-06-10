@@ -20,6 +20,8 @@ using System.Threading.Tasks;
 
 // The Content Dialog item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
+    /* Log in class logic and view */
+
 namespace App1
 {
     public sealed partial class ContentDialog1 : ContentDialog
@@ -61,8 +63,8 @@ namespace App1
 
         private async void button_Click_1(object sender, RoutedEventArgs e)
         {
-            string pass = await getPassword();
-            if (textBox.Text.Equals(pass))
+            string pass = await getPassword(textBox.Text);
+            if (passwordBox.Password.Equals(pass))
             {
                 loggedIn = true;
             }
@@ -70,7 +72,7 @@ namespace App1
             this.Hide();
         }
 
-        async private Task<string> getPassword()
+        async private Task<string> getPassword(string user)
         {
             // Get authorisation first
             client.BaseAddress = new Uri("http://localhost:7474/");
@@ -86,7 +88,12 @@ namespace App1
             // Assume it's succesful - will think of a success measure based on what it returns (200 is success)
             // Preparing a JSON query
             queryObject query1 = new queryObject();
+            string preQuery = "MATCH (a:doctor) WHERE a.username = \"";
+            preQuery += user;
+            preQuery += "\" RETURN a";
             query1.query = "MATCH (a:doctor) WHERE a.username = \"admin\" RETURN a";
+            query1.query = preQuery;
+          
             MemoryStream stream1 = new MemoryStream();
             DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(queryObject));
             ser.WriteObject(stream1, query1);
@@ -106,8 +113,10 @@ namespace App1
             JsonObject value = JsonObject.Parse(output);
             IJsonValue j, k, l, m;
             value.TryGetValue("data", out j);
-            Debug.WriteLine(j);
             JsonArray value2 = j.GetArray();
+            // In case the search does not return any results, this array will be empty
+            if (value2.Count == 0) return "s";
+            // Otherwise go on and parse it
             JsonArray value3 = value2[0].GetArray();
             JsonObject object2 = value3[0].GetObject();
             object2.TryGetValue("data", out k);

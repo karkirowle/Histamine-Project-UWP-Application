@@ -31,10 +31,11 @@ namespace App1
     /// Histamine Control Panel version 0.5 Alpha
     /// Implements two-way Bluetooth communication interface for the basis of histamine sensing apparatus
     /// 
-    /// NEW 0.5 - Basic login functionality implemented, interface created for different voltammetries, though the latter is not working fully.
+    /// NEW 0.6 - Extended login functionality implemented with Neo4j, more functionalities to come
+    /// 0.5 - Basic login functionality implemented, interface created for different voltammetries, though the latter is not working fully.
     /// 0.4 - Two-way Bluetooth communication interface with a TI MSP430 via an RFDuino. Able to receive a plot shorter time series
     /// data, sending is sometimes unstable.
-    /// 0.3 - Contains the OxyPlot module to visualise voltammetry. TODO: Make an interface for any voltammetry data series accounting for thread management.
+    /// 0.3 - Contains the OxyPlot module to visualise voltammetry. 
     /// 
     /// Bence Halpern
     /// 2017.05.30.
