@@ -14,9 +14,13 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Net.Http;
-using System.Runtime.Serialization.Json;
+using Windows.Security.Cryptography.Certificates;
+using System.Net.Http.Headers; // ez minek
+using System.Net;
+//using Windows.Web.Http;
+using System.Runtime.Serialization.Json; // one of the JSON things might be redundant
 using Windows.Data.Json;
-using System.Threading.Tasks;
+using System.Threading.Tasks;   
 
 // The Content Dialog item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -30,13 +34,15 @@ namespace App1
         public bool failedLog = false;
         private bool authorised = false;
         public string username = "";
-        public static readonly HttpClient client = new HttpClient(); // ezt kell public staticcá tenni és át kell menteni a mainpage egyik propertyjébe
+        private static HttpClientHandler myClientHandler = new HttpClientHandler();
+        public static readonly HttpClient client = new HttpClient(myClientHandler); // ezt kell public staticcá tenni és át kell menteni a mainpage egyik propertyjébe
 
         public ContentDialog1()
         {
             
             this.InitializeComponent();
             //if (failedLog) textBlock1.Text = "Password or username is wrong. Please try again.";
+            //secureAuthoriseConnect();
             authoriseConnect();
         }
 
@@ -90,22 +96,34 @@ namespace App1
             
         }
         
+        async private void secureAuthoriseConnect()
+        {
+         
+        }
+
         async private void authoriseConnect()
         {
             // Does the authorisation request and creates a shared HttpClient class which is accessible from outside
             // TODO: More elaborate exception handling for cases like: not connected to db
             // Get authorisation first
-            //string uriString = "https://9875.k.time4vps.cloud:7473/browser/";
+            string uriString = "https://9875.k.time4vps.cloud:7473/";
             string uriString2 = "http://localhost:7474/";
-            client.BaseAddress = new Uri(uriString2);
+            client.BaseAddress = new Uri(uriString);
+            // WebRequestHandler handler = new WebRequestHandler();
+            // X509Certificate2 certificate = GetMyX509Certificate();
+           // HttpClientHandler myClientHandler = new HttpClientHandler();
+           myClientHandler.ClientCertificateOptions = ClientCertificateOption.Automatic;
+           // client = new HttpClient(myClientHandler);
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             string authorisationString = "Basic ";
             var toTranslate = System.Text.Encoding.UTF8.GetBytes("neo4j:admin");
             authorisationString += System.Convert.ToBase64String(toTranslate);
             client.DefaultRequestHeaders.Add("Authorization", authorisationString);
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "user/neo4j");
+            //HttpWebRequest request2 = (HttpWebRequest)WebRequest.Create("https://9875.k.time4vps.cloud:7473/browser/user/neo4j");
             //request.Content = new StringContent("", System.Text.Encoding.UTF8, "application/json");
             var result = await client.SendAsync(request);
+            //var result = await client.SendRequestAsync(request);
             Debug.WriteLine(result);
             // Assume it's succesful - TODO: think of a success measure based on what it returns (200 is success)
             authorised = true;

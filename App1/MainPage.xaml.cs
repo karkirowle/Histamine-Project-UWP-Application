@@ -34,7 +34,7 @@ namespace App1
     /// Histamine Control Panel version 0.5 Alpha
     /// Implements two-way Bluetooth communication interface for the basis of histamine sensing apparatus
     /// 
-    /// NEW O.7 - Login functionality extended with patient selector screen.
+    /// NEW 0.7.1 - Login functionality extended with patient selector screen. Added capability to access data from webserver via SSL.
     /// 0.6 - Extended login functionality implemented with Neo4j, more functionalities to come
     /// 0.5 - Basic login functionality implemented, interface created for different voltammetries, though the latter is not working fully.
     /// 0.4 - Two-way Bluetooth communication interface with a TI MSP430 via an RFDuino. Able to receive a plot shorter time series

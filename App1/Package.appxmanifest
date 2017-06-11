@@ -23,6 +23,11 @@
     </Application>
   </Applications>
   <Capabilities>
+    <Capability Name="privateNetworkClientServer" />
+    <Capability Name="internetClientServer" />
+    <Capability Name="internetClient" />
+    <uap:Capability Name="sharedUserCertificates" />
+    <uap:Capability Name="enterpriseAuthentication" />
     <DeviceCapability Name="bluetooth" />
     <m2:DeviceCapability Name="bluetooth.genericAttributeProfile">
       <m2:Device Id="any">
