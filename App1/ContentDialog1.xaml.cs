@@ -27,10 +27,17 @@ namespace App1
     public sealed partial class ContentDialog1 : ContentDialog
     {
         public bool loggedIn = false;
-        private static readonly HttpClient client = new HttpClient(); // ezt kell public staticcá tenni és át kell menteni a mainpage egyik propertyjébe
+        public bool failedLog = false;
+        private bool authorised = false;
+        public string username = "";
+        public static readonly HttpClient client = new HttpClient(); // ezt kell public staticcá tenni és át kell menteni a mainpage egyik propertyjébe
+
         public ContentDialog1()
         {
+            
             this.InitializeComponent();
+            //if (failedLog) textBlock1.Text = "Password or username is wrong. Please try again.";
+            authoriseConnect();
         }
 
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -46,7 +53,7 @@ namespace App1
 
         }
 
-        private void button_Click(object sender, RoutedEventArgs e)
+    /*    private void button_Click(object sender, RoutedEventArgs e)
         {
             if ( textBox.Text.Equals("admin") && passwordBox.Password.Equals("admin"))
             {
@@ -54,7 +61,7 @@ namespace App1
                 
             }
             this.Hide();
-        }
+        } */
 
         private void textBlock1_SelectionChanged(object sender, RoutedEventArgs e)
         {
@@ -63,19 +70,34 @@ namespace App1
 
         private async void button_Click_1(object sender, RoutedEventArgs e)
         {
+            loginring.IsActive = true;
+            textBlock1.Text = "";
+            if (!authorised) authoriseConnect(); // if didn't get authorisation on startup handle it here
             string pass = await getPassword(textBox.Text);
             if (passwordBox.Password.Equals(pass))
             {
                 loggedIn = true;
+                loginring.IsActive = false;
+                username = textBox.Text;
+                this.Hide();
             }
-           
-            this.Hide();
+            else
+            {
+                textBlock1.Text = "Wrong credentials. Please try again.";
+                loginring.IsActive = false;
+            }
+            
+            
         }
-
-        async private Task<string> getPassword(string user)
+        
+        async private void authoriseConnect()
         {
+            // Does the authorisation request and creates a shared HttpClient class which is accessible from outside
+            // TODO: More elaborate exception handling for cases like: not connected to db
             // Get authorisation first
-            client.BaseAddress = new Uri("http://localhost:7474/");
+            //string uriString = "https://9875.k.time4vps.cloud:7473/browser/";
+            string uriString2 = "http://localhost:7474/";
+            client.BaseAddress = new Uri(uriString2);
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             string authorisationString = "Basic ";
             var toTranslate = System.Text.Encoding.UTF8.GetBytes("neo4j:admin");
@@ -85,15 +107,22 @@ namespace App1
             //request.Content = new StringContent("", System.Text.Encoding.UTF8, "application/json");
             var result = await client.SendAsync(request);
             Debug.WriteLine(result);
-            // Assume it's succesful - will think of a success measure based on what it returns (200 is success)
+            // Assume it's succesful - TODO: think of a success measure based on what it returns (200 is success)
+            authorised = true;
+        }
+
+        async private Task<string> getPassword(string user)
+        {
+           
             // Preparing a JSON query
             queryObject query1 = new queryObject();
+            // Concatenation of string query to request typed in username
             string preQuery = "MATCH (a:doctor) WHERE a.username = \"";
             preQuery += user;
             preQuery += "\" RETURN a";
-            query1.query = "MATCH (a:doctor) WHERE a.username = \"admin\" RETURN a";
+            //query1.query = "MATCH (a:doctor) WHERE a.username = \"admin\" RETURN a";
             query1.query = preQuery;
-          
+          // Writing out the JSON string for the authentication
             MemoryStream stream1 = new MemoryStream();
             DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(queryObject));
             ser.WriteObject(stream1, query1);

@@ -23,6 +23,9 @@ using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using System.Threading.Tasks;
 using OxyPlot;
 using OxyPlot.Series;
+using System.Net.Http;
+using System.Runtime.Serialization.Json;
+using Windows.Data.Json;
 
 
 namespace App1
@@ -31,7 +34,8 @@ namespace App1
     /// Histamine Control Panel version 0.5 Alpha
     /// Implements two-way Bluetooth communication interface for the basis of histamine sensing apparatus
     /// 
-    /// NEW 0.6 - Extended login functionality implemented with Neo4j, more functionalities to come
+    /// NEW O.7 - Login functionality extended with patient selector screen.
+    /// 0.6 - Extended login functionality implemented with Neo4j, more functionalities to come
     /// 0.5 - Basic login functionality implemented, interface created for different voltammetries, though the latter is not working fully.
     /// 0.4 - Two-way Bluetooth communication interface with a TI MSP430 via an RFDuino. Able to receive a plot shorter time series
     /// data, sending is sometimes unstable.
@@ -76,11 +80,58 @@ namespace App1
             // Login screen
             ContentDialog1 signInDialog = new ContentDialog1();
             await signInDialog.ShowAsync();
-            if (!signInDialog.loggedIn)
+            // Because it is statically allocated all the instances of content dialog share it, thus it only makes sense to access the property from the type itself
+            var client = ContentDialog1.client;
+            // Patient list request
+            // TODO: This is a repeated logic bit from ContentDialog1.xaml.cs so it would be more logical to implement this as a request logic class later
+            // Preparing a JSON query
+            queryObject query1 = new queryObject();
+            //Debug.WriteLine(signInDialog.username);
+            string preQuery = "MATCH (a:doctor)-[: treat]->(b:patient) WHERE a.username = \"";
+            preQuery += signInDialog.username;
+            preQuery += "\"  RETURN b";
+            query1.query = preQuery;
+            // Writing out the JSON string for the authentication
+            MemoryStream stream1 = new MemoryStream();
+            DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(queryObject));
+            ser.WriteObject(stream1, query1);
+            stream1.Position = 0;
+            StreamReader sr = new StreamReader(stream1);
+            string jsonString = sr.ReadToEnd();
+            //Debug.WriteLine(jsonString);
+            // HTTP post request
+            HttpRequestMessage request2 = new HttpRequestMessage(HttpMethod.Post, "db/data/cypher");
+            request2.Content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json");
+            HttpResponseMessage response = await client.SendAsync(request2);
+            Stream receiveStream = await response.Content.ReadAsStreamAsync();
+            StreamReader readStream = new StreamReader(receiveStream, System.Text.Encoding.UTF8);
+            string output = readStream.ReadToEnd();
+            //Debug.WriteLine(output);
+            // Deserialization of data
+            JsonObject value = JsonObject.Parse(output);
+            IJsonValue j, k, l, m;
+            value.TryGetValue("data", out j);
+            JsonArray value2 = j.GetArray();
+            // In case the search does not return any results, this array will be empty
+            List<string> patientList = new List<string> { }; // Meaning it will be empty if zero found
+            if (value2.Count != 0) // If there are patients
             {
-                LoginLoad();
+                for (int i=0; i < value2.Count; i++)
+                {
+                    JsonArray value3 = value2[i].GetArray();
+                    JsonObject object2 = value3[0].GetObject();
+                    object2.TryGetValue("data", out k);
+                    JsonObject object3 = k.GetObject();
+                    object3.TryGetValue("username", out m);
+                    string patient = m.GetString();
+                    patientList.Add(patient);
+                }
             }
 
+            ContentDialog2 patientDialog = new ContentDialog2(signInDialog.username);
+            patientDialog.patientList = patientList; // You could make patientlist private if you do an initaliser for it
+            await patientDialog.ShowAsync();
+            textBlock2_Copy.Text = String.Format("You are currently treating {0}.", patientDialog.patientToTreat);
         }
         private async void LoadedState()
         {
@@ -255,6 +306,11 @@ namespace App1
 
         }
         private void textBlock1_Copy_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void textBlock2_Copy_SelectionChanged(object sender, RoutedEventArgs e)
         {
 
         }

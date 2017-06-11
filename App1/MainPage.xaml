@@ -50,7 +50,8 @@
                 </Grid>
             </PivotItem>
         </Pivot>
-        <TextBlock x:Name="textBlock2" HorizontalAlignment="Left" Height="20" TextWrapping="Wrap" Text="Histamine Control Panel ALPHA NON-RELEASE" VerticalAlignment="Top" Width="460"/>
+        <TextBlock x:Name="textBlock2" HorizontalAlignment="Left" Height="20" TextWrapping="Wrap" Text="Histamine Control Panel ALPHA NON-RELEASE" VerticalAlignment="Top" Width="460" Margin="80,740,0,0"/>
+        <TextBlock x:Name="textBlock2_Copy" HorizontalAlignment="Left" Height="20" TextWrapping="Wrap" Text="Histamine Control Panel ALPHA NON-RELEASE" VerticalAlignment="Top" Width="460" Margin="645,403,0,0" SelectionChanged="textBlock2_Copy_SelectionChanged"/>
 
     </Grid>
 </Page>
