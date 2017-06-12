@@ -96,32 +96,22 @@ namespace App1
             
         }
         
-        async private void secureAuthoriseConnect()
-        {
-         
-        }
-
         async private void authoriseConnect()
         {
             // Does the authorisation request and creates a shared HttpClient class which is accessible from outside
             // TODO: More elaborate exception handling for cases like: not connected to db
             // Get authorisation first
             string uriString = "https://9875.k.time4vps.cloud:7473/";
-            string uriString2 = "http://localhost:7474/";
             client.BaseAddress = new Uri(uriString);
-            // WebRequestHandler handler = new WebRequestHandler();
-            // X509Certificate2 certificate = GetMyX509Certificate();
-           // HttpClientHandler myClientHandler = new HttpClientHandler();
            myClientHandler.ClientCertificateOptions = ClientCertificateOption.Automatic;
            // client = new HttpClient(myClientHandler);
             client.DefaultRequestHeaders.Add("Accept", "application/json");
             string authorisationString = "Basic ";
+            // TODO: Basically anyone can enter this with these credentials, try to come up for something with that
             var toTranslate = System.Text.Encoding.UTF8.GetBytes("neo4j:admin");
             authorisationString += System.Convert.ToBase64String(toTranslate);
             client.DefaultRequestHeaders.Add("Authorization", authorisationString);
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "user/neo4j");
-            //HttpWebRequest request2 = (HttpWebRequest)WebRequest.Create("https://9875.k.time4vps.cloud:7473/browser/user/neo4j");
-            //request.Content = new StringContent("", System.Text.Encoding.UTF8, "application/json");
             var result = await client.SendAsync(request);
             //var result = await client.SendRequestAsync(request);
             Debug.WriteLine(result);
@@ -131,30 +121,14 @@ namespace App1
 
         async private Task<string> getPassword(string user)
         {
-           
-            // Preparing a JSON query
-            queryObject query1 = new queryObject();
             // Concatenation of string query to request typed in username
             string preQuery = "MATCH (a:doctor) WHERE a.username = \"";
             preQuery += user;
             preQuery += "\" RETURN a";
-            //query1.query = "MATCH (a:doctor) WHERE a.username = \"admin\" RETURN a";
-            query1.query = preQuery;
-          // Writing out the JSON string for the authentication
-            MemoryStream stream1 = new MemoryStream();
-            DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(queryObject));
-            ser.WriteObject(stream1, query1);
-            stream1.Position = 0;
-            StreamReader sr = new StreamReader(stream1);
-            string jsonString = sr.ReadToEnd();
-            Debug.WriteLine(jsonString);
+            // Preparing a JSON query
+            queryObject query1 = new queryObject(preQuery);
             // HTTP post request
-            HttpRequestMessage request2 = new HttpRequestMessage(HttpMethod.Post, "db/data/cypher");
-            request2.Content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await client.SendAsync(request2);
-            Stream receiveStream = await response.Content.ReadAsStreamAsync();
-            StreamReader readStream = new StreamReader(receiveStream, System.Text.Encoding.UTF8);
-            string output = readStream.ReadToEnd();
+            string output = await query1.cypherPOST(client);
             Debug.WriteLine(output);
             // Deserialization of data
             JsonObject value = JsonObject.Parse(output);

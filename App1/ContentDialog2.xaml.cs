@@ -31,9 +31,7 @@ namespace App1
             // Initializes the class with the welcome name
          
             this.InitializeComponent();
-            textBlock.Text = "Hello ";
-            textBlock.Text += username;
-            textBlock.Text += "!";
+            textBlock.Text = String.Format("Hello {0}!", username);
         }
 
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
