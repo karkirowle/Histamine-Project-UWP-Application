@@ -20,8 +20,7 @@ using System.Net;
 //using Windows.Web.Http;
 using System.Runtime.Serialization.Json; // one of the JSON things might be redundant
 using Windows.Data.Json;
-using System.Threading.Tasks;   
-
+using System.Threading.Tasks;
 // The Content Dialog item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
     /* Log in class logic and view */
@@ -34,6 +33,7 @@ namespace App1
         public bool failedLog = false;
         private bool authorised = false;
         public string username = "";
+        public string password = "";
         private static HttpClientHandler myClientHandler = new HttpClientHandler();
         public static readonly HttpClient client = new HttpClient(myClientHandler); // ezt kell public staticcá tenni és át kell menteni a mainpage egyik propertyjébe
 
@@ -43,6 +43,7 @@ namespace App1
             this.InitializeComponent();
             //if (failedLog) textBlock1.Text = "Password or username is wrong. Please try again.";
             //secureAuthoriseConnect();
+            Debug.WriteLine("elindul ez is");
             authoriseConnect();
         }
 
@@ -79,12 +80,18 @@ namespace App1
             loginring.IsActive = true;
             textBlock1.Text = "";
             if (!authorised) authoriseConnect(); // if didn't get authorisation on startup handle it here
-            string pass = await getPassword(textBox.Text);
-            if (passwordBox.Password.Equals(pass))
+            //string pass = await getPassword(textBox.Text);
+            string[] loginfo = await saltHashPrivate(textBox.Text);
+            // TODO: get all relevant info
+            // TODO: verify user in IF using keyGenerator
+            Debug.WriteLine(loginfo[0]);
+            Debug.WriteLine(loginfo[1]);
+            if (keyGenerator.verifyUser(textBox.Text, passwordBox.Password, loginfo[1], loginfo[0]))
             {
                 loggedIn = true;
                 loginring.IsActive = false;
                 username = textBox.Text;
+                password = passwordBox.Password;
                 this.Hide();
             }
             else
@@ -101,6 +108,8 @@ namespace App1
             // Does the authorisation request and creates a shared HttpClient class which is accessible from outside
             // TODO: More elaborate exception handling for cases like: not connected to db
             // Get authorisation first
+            //DbContextOptionsBuilder
+           // var apiKey = ConfigurationManager.AppSettings.Get("apiKey");
             string uriString = "https://9875.k.time4vps.cloud:7473/";
             client.BaseAddress = new Uri(uriString);
            myClientHandler.ClientCertificateOptions = ClientCertificateOption.Automatic;
@@ -119,6 +128,22 @@ namespace App1
             authorised = true;
         }
 
+        private async Task<string[]> saltHashPrivate(string user)
+        {
+            String s = String.Format("MATCH(a:doctor) WHERE a.username = \"{0}\" RETURN a", user);
+            queryObject query1 = new queryObject(s);
+            string[] results = new string[10];
+            if (authorised)
+            {
+                string output = await query1.cypherPOST(client);
+                query1.parseFromData(output, new string[] { "salt", "password", "privateKey" }, out results);
+                Debug.WriteLine(output);
+                return results;
+               
+            }
+            return results;
+        }
+        /*
         async private Task<string> getPassword(string user)
         {
             // Concatenation of string query to request typed in username
@@ -149,6 +174,6 @@ namespace App1
             Debug.WriteLine(password);
             Debug.WriteLine(username);
             return password;
-        }
+        } */
     }
 }

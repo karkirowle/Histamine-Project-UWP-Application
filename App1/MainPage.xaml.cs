@@ -29,6 +29,8 @@ using System.Runtime.Serialization.Json;
 using Windows.Data.Json;
 using Windows.Security.Cryptography;
 using System.Globalization;
+using Windows.UI.ViewManagement;
+using Windows.Storage;
 
 
 namespace App1
@@ -71,9 +73,18 @@ namespace App1
         public MainPage()
         {
             this.InitializeComponent();
+        
+           
+            ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
+            titleBar.BackgroundColor = Color.FromArgb(1, 1, 144, 176);
+            titleBar.InactiveBackgroundColor = Color.FromArgb(1, 1, 144, 176);
+            titleBar.ButtonBackgroundColor = Color.FromArgb(1, 1, 144, 176);
+            titleBar.ButtonHoverBackgroundColor = Color.FromArgb(1, 1, 144, 176);
+            titleBar.ButtonPressedBackgroundColor = Color.FromArgb(1, 1, 144, 176);
+            titleBar.ButtonInactiveBackgroundColor = Color.FromArgb(1, 1, 144, 176);
             MyModel = new PlotModel { Title = "Loading voltamogramm..." };
             MeasurementModel = new PlotModel { Title = "Loading patient data" };
-            TryCrypto();
+     
             LoginLoad();
             Debug.WriteLine(MyPlotView.Background);
             MyPlotView.Background = new ImageBrush { ImageSource = new BitmapImage(new Uri(this.BaseUri, "Assets/SplashScreen.scale-200.png"))};
@@ -83,16 +94,14 @@ namespace App1
             LoadedState();
             Debug.WriteLine("B");
         }
-        public void TryCrypto()
-        {
-            securityAlgorithms sec = new securityAlgorithms();
-           // Debug.WriteLine(sec.keyGet);
-        }
+      
         private async void LoginLoad()
         {
             // Login screen
             ContentDialog1 signInDialog = new ContentDialog1();
+            Debug.WriteLine("login");
             await signInDialog.ShowAsync();
+            Debug.WriteLine("login shows");
             // Because it is statically allocated all the instances of content dialog share it, thus it only makes sense to access the property from the type itself
             var client = ContentDialog1.client;
             sharedClient = client;
@@ -108,7 +117,7 @@ namespace App1
             value.TryGetValue("data", out j);
             JsonArray value2 = j.GetArray();
             // In case the search does not return any results, this array will be empty
-            List<string> patientList = new List<string> { }; // Meaning it will be empty if zero found
+            List<PatientSheet> patientList = new List<PatientSheet> { }; // Meaning it will be empty if zero found
             if (value2.Count != 0) // If there are patients
             {
                 for (int i=0; i < value2.Count; i++)
@@ -117,32 +126,72 @@ namespace App1
                     JsonObject object2 = value3[0].GetObject();
                     object2.TryGetValue("data", out k);
                     JsonObject object3 = k.GetObject();
+                    // Switching it to name
                     object3.TryGetValue("username", out m);
-                    string patient = m.GetString();
-                    patientList.Add(patient);
+                    string username = m.GetString();
+                    string id = await fetchPatientId(username); // patients user
+                    Debug.WriteLine(id);
+                    string[] keys = await downloadPrivateKeys(signInDialog.username, id); // doctors user
+                    Debug.WriteLine(keys[0]);
+                    string decryptedDoctorPrivate = keyGenerator.Decrypt(keys[0], signInDialog.password);
+                    Debug.WriteLine(keys[1]);
+                    // Patient's private key is decrypted. It can be decrypted by doctor's private key, but only in pieces.
+                    // Partition string by _
+                    string[] splitKeys = keys[1].Split('_');
+                    string combinedKey = "";
+                    foreach (string splittedKey in splitKeys)
+                    {
+                        if (splittedKey.Length > 0)
+                        {
+                            string decryptedKeyPart;
+                            Debug.Write("encrypted:");
+                            Debug.WriteLine(splittedKey);
+                            keyGenerator.AsymmetricDecrypt(decryptedDoctorPrivate, splittedKey, out decryptedKeyPart);
+                            Debug.Write("decrypted:");
+                            Debug.WriteLine(decryptedKeyPart);
+                            combinedKey += decryptedKeyPart;
+                        }
+                    }
+                    Debug.WriteLine(combinedKey);
+                    // Combined key is patient's private key, with those we can decrypt the other relevant data
+                    string dob;
+                    object3.TryGetValue("dob", out m);
+                    keyGenerator.AsymmetricDecrypt(combinedKey, m.GetString(), out dob);
+                    Debug.WriteLine(dob);
+                    string name;
+                    object3.TryGetValue("name", out m);
+                    keyGenerator.AsymmetricDecrypt(combinedKey, m.GetString(), out name);
+                    Debug.WriteLine(name);
+                    PatientSheet patientItem = new PatientSheet { patientName = name, patientDOB = dob, patientUser = username };
+                    patientList.Add(patientItem);
                 }
             }
             ContentDialog2 patientDialog = new ContentDialog2(signInDialog.username);
             patientDialog.patientList = patientList; // You could make patientlist private if you do an initaliser for it
             await patientDialog.ShowAsync();
-            textBlock2_Copy.Text = String.Format("You are currently treating {0}.", patientDialog.patientToTreat);
+            commandBar.Text = String.Format("Currently treating {0}.", patientDialog.patientDisplayName);
             this.userBeingTreated = patientDialog.patientToTreat;
             this.doctor = signInDialog.username;
             // When everything is done, load the patient measurement data into the plot
             List<MeasurementPoint> mes = await fetchMeasurements();
+            Debug.Write("mes:");
+            Debug.WriteLine(mes.Count);
             if (mes.Count != 0) updatePatientPlot(mes);
         }
         private async void LoadedState()
         {
            var taskDevices = await getDevices();
-           updatePlot(x_v, y_v);
-           List<MeasurementPoint> mes = await fetchMeasurements();
-           if(mes.Count != 0) updatePatientPlot(mes);
+         
+           //updatePlot(x_v, y_v);
+            updatePlot(x_v, y_v);
+            //  List<MeasurementPoint> mes = await fetchMeasurements();
+            //  if(mes.Count != 0) updatePatientPlot(mes);
         }
 
         public async Task<List<string>> getDevices()
         {
             Debug.WriteLine("C");
+           
             foreach (DeviceInformation di in await DeviceInformation.FindAllAsync(GattDeviceService.GetDeviceSelectorFromUuid(new Guid("00002220-0000-1000-8000-00805f9b34fb"))))
             {
                 Debug.WriteLine("D");
@@ -158,23 +207,29 @@ namespace App1
                 Debug.WriteLine("F:Read_char");
 
             }
-                return deviceList;
+                return deviceList; 
         }
 
         async void updatePlot(double[] x_values, double[] y_values)
         {
+            Debug.WriteLine(x_values.Length);
+            Debug.WriteLine(y_values.Length);
             // TODO: generalise it, so this along with updatePatientPlot() is more abstract
             MyModel = new PlotModel { Title = "Cyclic Voltammetry" };
-            var LineSeries = new LineSeries { };
+            var LineSeries = new LineSeries { Color = OxyColors.MediumTurquoise };
+            //var LineSeries = new LineSeries { MarkerType = MarkerType.Circle };
             for (int i = 0; i < x_values.Length; i++)
             {
                 LineSeries.Points.Add(new DataPoint(x_values[i], y_values[i]));
             }
             MyModel.Series.Add(LineSeries);
+            MyModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Voltage (V)" });
+            MyModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Current (uA)" });
             // Dispatcher call to reach UI thread
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
                 MyPlotView.Background = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
                 MyPlotView.Model = MyModel;
+               
          });
 
         }
@@ -183,7 +238,7 @@ namespace App1
             // TODO: generalise it, so this along with updatePatientPlot() is more abstract
             MeasurementModel = new PlotModel { Title = "Patient histamine data" };
             //var LineSeries = new LineSeries { };
-            var StemSeries = new StemSeries
+            var LineSeries = new LineSeries
             {
                 MarkerStroke = OxyColors.Red,
                 MarkerType = MarkerType.Circle
@@ -192,14 +247,16 @@ namespace App1
             DateTime endDate = mesList.Last().date;
             var minValue = DateTimeAxis.ToDouble(startDate);
             //Debug.WriteLine(minValue); Debug.WriteLine(maxValue);
+
             var maxValue = DateTimeAxis.ToDouble(endDate);
-            MeasurementModel.Axes.Add(new DateTimeAxis{ Position = AxisPosition.Bottom, Minimum = minValue, Maximum = maxValue, StringFormat = "dd/MM/yyyy \n HH:mm:ss"});
+            MeasurementModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = 0, Maximum = 100, Title = "Concentration (mM)"  });
+            MeasurementModel.Axes.Add(new DateTimeAxis{ Title = "Time of measurement", Position = AxisPosition.Bottom, Minimum = minValue, Maximum = maxValue, StringFormat = "dd/MM/yyyy \n HH:mm:ss"});
             for (int i = 0; i < mesList.Count(); i++)
             {
                 DateTime i2date = mesList.ElementAt(i).date;
-                StemSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(i2date), mesList.ElementAt(i).value));
+                LineSeries.Points.Add(new DataPoint(DateTimeAxis.ToDouble(i2date), mesList.ElementAt(i).value));
             }
-            MeasurementModel.Series.Add(StemSeries);
+            MeasurementModel.Series.Add(LineSeries);
             // Dispatcher call to reach UI thread
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
                 MeasurementPlot.Background = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
@@ -331,7 +388,35 @@ namespace App1
                 yield return str.Substring(i, Math.Min(maxChunkSize, str.Length - i));
         }
 
-        
+
+        private async Task<string[]> downloadPrivateKeys(string user, string id)
+        {
+            String s = String.Format("MATCH (a:doctor) WHERE a.username='{0}' RETURN a", user);
+            queryObject query1 = new queryObject(s);
+            string[] results = new string[10];
+            // TODO: Authorisation check
+
+            string output = await query1.cypherPOST(sharedClient);
+            Debug.WriteLine(output);
+            query1.parseFromData(output, new string[] { "privateKey",  String.Format("keyfor{0}", id)}, out results);
+            return results;
+
+        }
+
+        private async Task<string> fetchPatientId(string user)
+        {
+            String s = String.Format("MATCH (a:patient) WHERE a.username='{0}' RETURN id(a)", user);
+            queryObject query1 = new queryObject(s);
+            string[] results = new string[10];
+        // TODO: Authorisation check
+            
+                string output = await query1.cypherPOST(sharedClient);
+                Debug.WriteLine(output);
+                query1.parseFromData(output, new string[] { "data" }, out results, true);
+                return results[0];
+           
+        }
+
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
@@ -414,6 +499,35 @@ namespace App1
         {
             public DateTime date { get; set; }
             public double value { get; set; }
+        }
+
+        private async void exportButton_Click(object sender, RoutedEventArgs e)
+        {
+          
+            StorageFile newFile = await DownloadsFolder.CreateFileAsync("graph.pdf",
+        CreationCollisionOption.GenerateUniqueName);
+            await Task.Run(async () =>
+            {
+                using (Stream outputStream = await newFile.OpenStreamForWriteAsync())
+                {
+                    var pdfExporter = new PdfExporter { Width = 600, Height = 400 };
+
+                    pdfExporter.Export(MyModel, outputStream);
+                }
+            });
+        }
+
+        private async void csvButton_Click(object sender, RoutedEventArgs e)
+        {
+           StorageFile newFile = await DownloadsFolder.CreateFileAsync("graph.svg", CreationCollisionOption.GenerateUniqueName);
+            await Task.Run(async () =>
+            {
+                using (Stream outputStream = await newFile.OpenStreamForWriteAsync())
+                {
+                    var exporter = new SvgExporter { Width = 600, Height = 400 };
+                    exporter.Export(MyModel, outputStream);
+                }
+            }); 
         }
     }
 }

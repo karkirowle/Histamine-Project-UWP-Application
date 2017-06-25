@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Diagnostics;
 
 // The Content Dialog item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -19,9 +20,10 @@ namespace App1
 {
     public sealed partial class ContentDialog2 : ContentDialog
     {
-        public List<string> patientList = new List<string> { };
+        public List<PatientSheet> patientList = new List<PatientSheet> { };
         public string username;
         public string patientToTreat;
+        public string patientDisplayName;
         public ContentDialog2()
         {
             this.InitializeComponent();
@@ -31,7 +33,8 @@ namespace App1
             // Initializes the class with the welcome name
          
             this.InitializeComponent();
-            textBlock.Text = String.Format("Hello {0}!", username);
+            // TODO: display doctor full name
+           // textBlock.Text = String.Format("Hello {0}!", username);
         }
 
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -55,18 +58,37 @@ namespace App1
             if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
             {
                 //Set the ItemsSource to be your filtered dataset
-                var items = patientList.Where(x => x.Contains(sender.Text));
+                var items = patientList.Where(x => x.patientName.Contains(sender.Text));
                 //List<string> items = new List<string> { };
+                var items2 = new List<string> { };
                 if (!items.Any())
-                    items = new List<string> { "No Results" };
-                sender.ItemsSource = items;
+                {
+                    items2 = new List<string> { "No Results" }; // some no results indication would be useful here
+                }
+                else
+                {
+                    items2 = new List<string> { };
+                    foreach (var record in items)
+                    {
+                        items2.Add(record.patientName + ',' + record.patientDOB + ',' +record.patientUser);
+                    }
+                }
+                sender.ItemsSource = items2;
             }
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            patientToTreat = patientsuggest.Text;
+            string[] namedob = patientsuggest.Text.Split(',');
+            Debug.WriteLine(namedob[0]);
+            Debug.WriteLine(namedob[1]);
+            PatientSheet Item = patientList.Find(c => (c.patientName == namedob[0]) && (c.patientDOB == namedob[1]));
+            patientToTreat = Item.patientUser;
+            patientDisplayName = patientsuggest.Text;
+
             this.Hide();
         }
+
+        
     }
 }

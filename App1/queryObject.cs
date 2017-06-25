@@ -8,6 +8,9 @@ using System.Runtime.Serialization.Json; // one of the JSON things might be redu
 using Windows.Data.Json;
 using System.IO;
 using System.Net.Http;
+using System.Diagnostics;
+
+
 
 namespace App1
 {
@@ -22,10 +25,10 @@ namespace App1
         public Object parameters = new Object();
 
         public string jsonstring = "";
+  
 
         public queryObject()
         {
-
         }
        public queryObject(string queryT)
         {
@@ -49,6 +52,51 @@ namespace App1
             StreamReader readStream = new StreamReader(receiveStream, System.Text.Encoding.UTF8);
             string output = readStream.ReadToEnd();
             return output;
+        }
+        public void parseFromData(string output, string[] fields, out string[] results)
+        {
+            bool allData = false;
+            parseFromData(output, fields, out results, allData);
+        }
+        public void parseFromData(string output, string[] fields, out string[] results, bool allData)
+        {
+            results = new string[fields.Length];
+            JsonObject value = JsonObject.Parse(output);
+            IJsonValue j, k;
+            int i = 0;
+            value.TryGetValue("data", out j);
+            JsonArray value2 = j.GetArray();
+            // In case the search does not return any results, this array will be empty""
+            if (value2.Count == 0) results[0] = "empty";
+            else
+            {
+            
+                if (!allData)
+                {
+                    // Otherwise go on and parse it
+                    JsonObject object2 = value2[0].GetArray()[0].GetObject();
+                    object2.TryGetValue("data", out k);
+
+                    // Go through each string fields specified in the array
+                    JsonObject object3 = k.GetObject();
+                    foreach (string field in fields)
+                    {
+                        IJsonValue l;
+                        object3.TryGetValue(field, out l);
+                        results[i++] = l.GetString();
+                    }
+                }
+                else
+                {
+                    value2 = value2[0].GetArray();
+                    results = new string[value2.Count()];
+                    for (int m = 0; m < value2.Count(); m++)
+                    {
+                        // TODO: Type-checking needed here
+                        results[m] = Convert.ToString(value2[m].GetNumber());
+                    } 
+                }
+            }
         }
     }
 }
